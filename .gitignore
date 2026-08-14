@@ -223,6 +223,7 @@ debug.log
 .tmp/
 .temp/
 .cache/
+.codegraph/
 
 # Node (in case of tooling)
 node_modules/
@@ -241,4 +242,3 @@ plans/
 
 # Templates Release pipeline (scripts/, .github/workflows/templates-release.yml)
 /dist/
-
