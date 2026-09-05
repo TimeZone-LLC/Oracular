@@ -239,7 +239,7 @@ class StructuredData extends StatelessWidget {
       '@context': 'https://schema.org',
       '@type': 'WebPage',
       'name': name,
-      if (description != null) 'description': description,
+      'description': ?description,
       'url': url ?? SeoConfig.siteUrl,
     }, key: key);
   }
@@ -259,7 +259,7 @@ class StructuredData extends StatelessWidget {
       '@context': 'https://schema.org',
       '@type': 'Article',
       'headline': headline,
-      if (description != null) 'description': description,
+      'description': ?description,
       if (image != null) 'image': SeoConfig.absoluteUrl(image),
       if (authorName != null)
         'author': <String, Object?>{
@@ -278,7 +278,7 @@ class StructuredData extends StatelessWidget {
         'datePublished': datePublished.toUtc().toIso8601String(),
       if (dateModified != null)
         'dateModified': dateModified.toUtc().toIso8601String(),
-      if (url != null) 'mainEntityOfPage': url,
+      'mainEntityOfPage': ?url,
     };
     return StructuredData(json, key: key);
   }

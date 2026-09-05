@@ -33,6 +33,7 @@ library;
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
+import 'package:oracular/version.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -47,7 +48,7 @@ late final String _fakeDartPath;
 
 /// The oracular release version this run packages. Cross-checked
 /// against `oracular/pubspec.yaml:3` by the generator.
-const String _version = '3.5.0';
+const String _version = oracularVersion;
 final String _buildId = '$_version+install-offer-test';
 
 void main() {

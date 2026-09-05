@@ -26,6 +26,7 @@ library;
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
+import 'package:oracular/version.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -45,9 +46,10 @@ late final String _generatorPath;
 /// One-shot generated setup.dart, reused across all templates.
 late final String _generatedSetupPath;
 
-/// Pinned version + build-id for all packaging in this run; matches
-/// oracular/pubspec.yaml:3 cross-check.
-const String _version = '3.5.0';
+/// Version + build-id for all packaging in this run. Read from
+/// `lib/version.dart` so the generator's pubspec/version.dart cross-check
+/// never fails after a release bump.
+const String _version = oracularVersion;
 final String _buildId =
     '$_version+${DateTime.now().toUtc().toIso8601String().replaceAll(RegExp(r'[^0-9TZ]'), '').substring(0, 16)}Z-smoke';
 

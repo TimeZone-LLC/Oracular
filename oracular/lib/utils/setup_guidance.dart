@@ -55,8 +55,8 @@ class SetupGuidance {
   static List<String> createdProjectItems(SetupConfig config) {
     return <String>[
       '${mainProjectName(config)}/ - ${mainProjectLabel(config)}',
-      if (config.template.isJasprDocs)
-        '.oracular_deps/ - Local Arcane docs dependencies',
+      if (config.createModels && !config.template.isFlutterApp)
+        '.oracular_deps/ - Vendored pure-Dart shim packages',
       if (config.createModels)
         '${config.modelsPackageName}/ - Shared models package',
       if (config.createServer)
@@ -98,7 +98,11 @@ class SetupGuidance {
     }
 
     if (config.template.isJasprDocs) {
-      _printJasprDocsDependencyChecklist(config);
+      _printJasprDocsChecklist();
+    }
+
+    if (config.createModels && !config.template.isFlutterApp) {
+      _printVendoredShimChecklist(config);
     }
 
     if (config.template.isJasprApp) {
@@ -346,21 +350,29 @@ class SetupGuidance {
     }
   }
 
-  static void _printJasprDocsDependencyChecklist(SetupConfig config) {
+  static void _printJasprDocsChecklist() {
+    UserPrompt.printDivider(title: 'Jaspr Docs');
+    UserPrompt.printList(<String>[
+      '`jaspr serve` hot-reloads code changes; restart the server to '
+          'pick up new docs content (markdown additions, new pages).',
+    ]);
+  }
+
+  static void _printVendoredShimChecklist(SetupConfig config) {
     final String depsPath = p.join(config.outputDir, '.oracular_deps');
-    final String docsPubspec = p.join(
+    final String mainPubspec = p.join(
       config.outputDir,
-      config.webPackageName,
+      mainProjectName(config),
       'pubspec.yaml',
     );
 
-    UserPrompt.printDivider(title: 'Jaspr Docs Dependencies');
+    UserPrompt.printDivider(title: 'Vendored Dependency Shims');
     UserPrompt.printList(<String>[
-      'Local dependencies are copied to $depsPath.',
-      'Keep .oracular_deps/ next to ${config.webPackageName}/.',
-      'If you move folders, update path dependencies in $docsPubspec.',
-      '`jaspr serve` hot-reloads code changes; restart the server to '
-          'pick up new docs content (markdown additions, new pages).',
+      'Pure-Dart shim packages are vendored to $depsPath so '
+          '${config.modelsPackageName} resolves without the Flutter SDK.',
+      'Keep .oracular_deps/ next to ${mainProjectName(config)}/.',
+      'If you move folders, update the dependency_overrides paths in '
+          '$mainPubspec.',
     ]);
   }
 
@@ -584,14 +596,14 @@ class SetupGuidance {
       _writeServerGuide(buffer, config);
     }
 
-    if (config.template.isJasprDocs) {
-      buffer.writeln('## Jaspr Docs Dependencies');
+    if (config.createModels && !config.template.isFlutterApp) {
+      buffer.writeln('## Vendored Dependency Shims');
       buffer.writeln();
       buffer.writeln(
-        '- Local deps: `${p.join(config.outputDir, '.oracular_deps')}`',
+        '- Shims: `${p.join(config.outputDir, '.oracular_deps')}`',
       );
       buffer.writeln(
-        '- Keep `.oracular_deps/` next to `${config.webPackageName}/`.',
+        '- Keep `.oracular_deps/` next to `${mainProjectName(config)}/`.',
       );
       buffer.writeln();
     }

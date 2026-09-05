@@ -75,19 +75,30 @@ void main() {
       );
     });
 
-    test('includes .oracular_deps item for Jaspr docs projects', () {
-      final SetupConfig config = SetupConfig(
+    test(
+        'includes .oracular_deps item only when shims are vendored '
+        '(models on a non-Flutter template)', () {
+      final SetupConfig withModels = SetupConfig(
         appName: 'docs_site',
         orgDomain: 'com.example',
         baseClassName: 'DocsSite',
         template: TemplateType.arcaneJasprDocs,
         outputDir: '/tmp/project',
+        createModels: true,
+      );
+      expect(
+        SetupGuidance.createdProjectItems(withModels)
+            .any((String item) => item.startsWith('.oracular_deps/')),
+        isTrue,
       );
 
-      final List<String> items = SetupGuidance.createdProjectItems(config);
+      final SetupConfig withoutModels = withModels.copyWith(
+        createModels: false,
+      );
       expect(
-        items.any((String item) => item.startsWith('.oracular_deps/')),
-        isTrue,
+        SetupGuidance.createdProjectItems(withoutModels)
+            .any((String item) => item.startsWith('.oracular_deps/')),
+        isFalse,
       );
     });
 
@@ -358,7 +369,7 @@ void main() {
       );
       final String joined = output.join('\n');
 
-      expect(joined, contains('Jaspr Docs Dependencies'));
+      expect(joined, contains('Jaspr Docs'));
       expect(joined, contains('hot-reloads code changes'));
       expect(
         joined,

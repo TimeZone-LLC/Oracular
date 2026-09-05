@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io' as io;
 import 'dart:io';
 
@@ -172,12 +174,73 @@ class ProcessRunner {
     return await process.exitCode;
   }
 
-  /// Check if a command exists on the system
-  Future<bool> commandExists(String command) async {
+  /// Run a command but give up after [timeout], killing the process.
+  ///
+  /// Used for tool probes (`which`, `--version`) where a wedged external
+  /// CLI must never hang the whole wizard — a hung `flutterfire --version`
+  /// would otherwise block `oracular check tools` forever.
+  Future<ProcessResult> runBounded(
+    String executable,
+    List<String> arguments, {
+    Duration timeout = const Duration(seconds: 15),
+  }) async {
+    final Process process = await Process.start(
+      executable,
+      arguments,
+      runInShell: Platform.isWindows,
+    );
+
+    // Collect output via explicit subscriptions so they can be cancelled on
+    // timeout. If the probed tool spawns a grandchild (e.g. the flutterfire
+    // wrapper script starting a Dart VM), killing the direct child leaves
+    // the grandchild holding the pipe write ends — an uncancelled stream
+    // subscription on those pipes would keep THIS VM alive forever.
+    final StringBuffer stdoutBuffer = StringBuffer();
+    final StringBuffer stderrBuffer = StringBuffer();
+    final StreamSubscription<String> stdoutSub =
+        process.stdout.transform(utf8.decoder).listen(stdoutBuffer.write);
+    final StreamSubscription<String> stderrSub =
+        process.stderr.transform(utf8.decoder).listen(stderrBuffer.write);
+
     try {
-      final ProcessResult result = await run(Platform.isWindows ? 'where' : 'which', <String>[
-        command,
-      ]);
+      final int exitCode = await process.exitCode.timeout(timeout);
+      // Give the pipes a moment to flush any buffered output, but never
+      // wait on a grandchild that kept them open.
+      await Future.wait(<Future<void>>[
+        stdoutSub.asFuture<void>(),
+        stderrSub.asFuture<void>(),
+      ]).timeout(const Duration(seconds: 2), onTimeout: () => <void>[]);
+      return ProcessResult(
+        exitCode: exitCode,
+        stdout: stdoutBuffer.toString(),
+        stderr: stderrBuffer.toString(),
+      );
+    } on TimeoutException {
+      process.kill(ProcessSignal.sigkill);
+      return ProcessResult(
+        exitCode: -1,
+        stdout: stdoutBuffer.toString(),
+        stderr:
+            '$executable ${arguments.join(' ')} timed out after '
+            '${timeout.inSeconds}s',
+      );
+    } finally {
+      await stdoutSub.cancel();
+      await stderrSub.cancel();
+    }
+  }
+
+  /// Check if a command exists on the system
+  Future<bool> commandExists(
+    String command, {
+    Duration timeout = const Duration(seconds: 15),
+  }) async {
+    try {
+      final ProcessResult result = await runBounded(
+        Platform.isWindows ? 'where' : 'which',
+        <String>[command],
+        timeout: timeout,
+      );
       return result.success;
     } catch (e) {
       return false;
@@ -188,9 +251,14 @@ class ProcessRunner {
   Future<String?> getCommandVersion(
     String command, {
     List<String> versionArgs = const <String>['--version'],
+    Duration timeout = const Duration(seconds: 15),
   }) async {
     try {
-      final ProcessResult result = await run(command, versionArgs);
+      final ProcessResult result = await runBounded(
+        command,
+        versionArgs,
+        timeout: timeout,
+      );
       if (result.success) {
         return result.stdout.trim().split('\n').first;
       }

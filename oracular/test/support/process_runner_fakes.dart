@@ -151,7 +151,10 @@ class ToolInventoryProcessRunner extends ProcessRunner {
   final List<CapturedProcessCall> calls = <CapturedProcessCall>[];
 
   @override
-  Future<bool> commandExists(String command) async {
+  Future<bool> commandExists(
+    String command, {
+    Duration timeout = const Duration(seconds: 15),
+  }) async {
     calls.add(
       CapturedProcessCall(executable: 'which', arguments: <String>[command]),
     );
@@ -162,6 +165,7 @@ class ToolInventoryProcessRunner extends ProcessRunner {
   Future<String?> getCommandVersion(
     String command, {
     List<String> versionArgs = const <String>['--version'],
+    Duration timeout = const Duration(seconds: 15),
   }) async {
     calls.add(CapturedProcessCall(executable: command, arguments: versionArgs));
     if (missingCommands.contains(command)) {

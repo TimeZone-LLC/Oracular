@@ -197,7 +197,7 @@ extension TemplateTypeExtension on TemplateType {
     return true; // All templates support server
   }
 
-  /// Get the template number (1-4)
+  /// Get the template number (1-based, matches the wizard list order)
   int get number {
     return index + 1;
   }

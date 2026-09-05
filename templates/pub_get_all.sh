@@ -43,18 +43,8 @@ run_dart_get "arcane_models" "dart"
 
 # Jaspr templates
 run_dart_get "arcane_jaspr_app" "jaspr"
-
-# arcane_jaspr_docs depends on generated local deps in ../.oracular_deps
-if [ -d "$SCRIPT_DIR/arcane_jaspr_docs" ]; then
-  echo "=== arcane_jaspr_docs (jaspr) ==="
-  if [ -f "$SCRIPT_DIR/.oracular_deps/arcane_lexicon/pubspec.yaml" ] && [ -f "$SCRIPT_DIR/.oracular_deps/arcane_jaspr/pubspec.yaml" ]; then
-    cd "$SCRIPT_DIR/arcane_jaspr_docs"
-    dart pub get
-  else
-    echo "Skipping arcane_jaspr_docs: missing templates/.oracular_deps/arcane_lexicon or templates/.oracular_deps/arcane_jaspr."
-    echo "Generate a Jaspr docs project with Oracular to provision local docs deps."
-  fi
-  echo ""
-fi
+run_dart_get "arcane_jaspr_docs" "jaspr"
+run_dart_get "arcane_jaspr_flutter_embed/arcane_jaspr_flutter_embed_web" "jaspr"
+run_flutter_get "arcane_jaspr_flutter_embed/arcane_jaspr_flutter_embed_app"
 
 echo "Done!"

@@ -1,3 +1,35 @@
+## x.x.x
+
+### Fixed
+
+- Jaspr templates (`arcane_jaspr_app`, `arcane_jaspr_docs`,
+  `arcane_jaspr_flutter_embed_web`) now pin `arcane_jaspr` to the same git
+  snapshot as the git-referenced `arcane_jaspr_shadcn` renderer via a
+  `dependency_overrides` entry. Mixing the pub.dev `arcane_jaspr` release
+  with monorepo-HEAD renderers broke `jaspr build` in fresh scaffolds with
+  "Unable to find modules" errors whenever the monorepo was ahead of the
+  published release. Remove the override once the renderer packages are
+  published to pub.dev.
+- `setup_install_offer_test` and `setup_script_smoke_test` read the release
+  version from `lib/version.dart` instead of a hardcoded constant, so
+  version bumps no longer break the generator's version cross-check.
+- Tool probes (`commandExists` / `getCommandVersion`) now run with a 15s
+  timeout and kill the probed process on expiry, so a wedged external CLI
+  (e.g. a hanging `flutterfire --version`) can no longer hang
+  `oracular check tools` or the wizard forever; the tool is reported with
+  an unknown version instead.
+- Setup guidance for `.oracular_deps/` now describes the vendored pure-Dart
+  shim packages and only appears when shims are actually vendored (models
+  enabled on a non-Flutter template) instead of on every Jaspr docs project.
+- `templates/pub_get_all.sh` no longer skips `arcane_jaspr_docs` behind the
+  removed legacy `.oracular_deps` vendoring check and now covers both
+  `arcane_jaspr_flutter_embed` packages.
+
+### Changed
+
+- Jaspr templates raise the `arcane_jaspr` constraint floor to `^3.4.0`,
+  matching the release published to pub.dev on 2026-08-18.
+
 ## 3.5.2 - 2026-05-15
 
 - Updated the runtime version banner to match the published package version.
